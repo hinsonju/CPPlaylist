@@ -7,44 +7,40 @@ in megabytes.'''
 import sys
 import os
 import random
-import math
 import shutil
 
-#Build a playlist from sourcePath that is no bigger than maxSize in MB
+def build_complete_song_list(sourcePath):
+	complete_song_list = []
+	for root, dirs, files in os.walk(sourcePath):
+		for f in files: 
+			complete_song_list.append(os.path.join(root, f))
+	return complete_song_list
+
+
+#Build a random playlist from completeList that is no bigger than maxSize in MB
 #Does not include duplicate items
-def build_playlist(sourcePath, maxSize):
-	print('Building Playlist...')
+def build_playlist(completeList, maxSize):
+	playlist = []
 	totalSize = 0
-	playlist = dict()
-	while True:
-		filePath = get_file(sourcePath)
-		fileName = os.path.basename(filePath)
-		if fileName in playlist: continue
-		size = convert_B_to_MB(get_size(filePath))
+	random.shuffle(completeList)
+	for song in completeList:
+		if song in playlist: continue
+		size = convert_B_to_MB(get_size(song))
 		totalSize += size
 		if totalSize >= maxSize: break
-		playlist[fileName] = filePath
+		playlist.append(song)
 	return playlist
-	
-#Get a random file from the source directory.
-#May also grab a random file from a random directory in source Directory
-def get_file(sourcePath):
-	f = random.choice(os.listdir(sourcePath))
-	newPath = os.path.join(sourcePath, f)
-	if os.path.isdir(newPath):
-		return get_file(newPath)
-	else: return newPath
 
 def get_size(filePath):
 	return os.path.getsize(filePath)
 
 def convert_B_to_MB(bytes):
-	return (bytes / (math.pow(10, 6)))
+	return (bytes / (10**6))
 
 #copy files from playlist to target directory
 def copy_files(playlist, targetPath):
 	for item in playlist:
-		path = playlist[item]
+		path = item
 		print('Copying ' + item + '...', end = '')
 		sys.stdout.flush()
 		shutil.copy2(path, targetPath)
@@ -70,7 +66,8 @@ def main():
 			print('Aborting')
 			sys.exit(1)
 			
-	playlist = build_playlist(sourcePath, targetSize)
+	completeList = build_complete_song_list(sourcePath)
+	playlist = build_playlist(completeList, targetSize)
 	copy_files(playlist, targetPath)
 
 if __name__ == '__main__':
