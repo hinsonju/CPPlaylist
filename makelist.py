@@ -1,7 +1,7 @@
-#!/usr/bin/python
-'''This program will create a random playlist of songs from a 
+#!/usr/bin/python3
+'''Creates a random playlist of songs from a 
 source directory. The size of the playlist is specified by the user
-in megabytes'''
+in megabytes.'''
 #Author: Cody Hinson
 
 import sys
@@ -13,25 +13,24 @@ import shutil
 #Build a playlist from sourcePath that is no bigger than maxSize in MB
 #Does not include duplicate items
 def build_playlist(sourcePath, maxSize):
-	listIndex = 0
+	print('Building Playlist...')
 	totalSize = 0
 	playlist = dict()
 	while True:
 		filePath = get_file(sourcePath)
 		fileName = os.path.basename(filePath)
-		if fileName not in playlist:
-			size = convert_B_to_MB(get_size(filePath))
-			totalSize += size
-			if totalSize >= maxSize: break
-			playlist[fileName] = filePath
-		print('SIZE: ' , totalSize)
+		if fileName in playlist: continue
+		size = convert_B_to_MB(get_size(filePath))
+		totalSize += size
+		if totalSize >= maxSize: break
+		playlist[fileName] = filePath
 	return playlist
 	
 #Get a random file from the source directory.
-#May also grab a random file from a random directory is source Directory
+#May also grab a random file from a random directory in source Directory
 def get_file(sourcePath):
 	f = random.choice(os.listdir(sourcePath))
-	newPath = sourcePath + '/' + f
+	newPath = os.path.join(sourcePath, f)
 	if os.path.isdir(newPath):
 		return get_file(newPath)
 	else: return newPath
@@ -46,8 +45,10 @@ def convert_B_to_MB(bytes):
 def copy_files(playlist, targetPath):
 	for item in playlist:
 		path = playlist[item]
-		print ('%s  %s' % (path, targetPath))
+		print('Copying ' + item + '...', end = '')
+		sys.stdout.flush()
 		shutil.copy2(path, targetPath)
+		print(' Copied')
 	return
 	
 def main():
