@@ -9,13 +9,24 @@ import os
 import random
 import shutil
 
+#A MusicFile object has a name, path, and size
+class MusicFile:
+	def __init__(self, path):
+		self.path = path
+		self.name = os.path.basename(path)
+		self.size = os.path.getsize(path)
+		
+	def copyTo(self, targetFolder):
+		shutil.copy2(self.path, targetFolder)
+
+#Returns a list of all items in sourcePath and subdirectories
 def build_complete_song_list(sourcePath):
 	complete_song_list = []
 	for root, dirs, files in os.walk(sourcePath):
-		for f in files: 
-			complete_song_list.append(os.path.join(root, f))
+		for f in files:
+			song = MusicFile(os.path.join(root, f))
+			complete_song_list.append(song)
 	return complete_song_list
-
 
 #Build a random playlist from completeList that is no bigger than maxSize in MB
 #Does not include duplicate items
@@ -25,25 +36,17 @@ def build_playlist(completeList, maxSize):
 	random.shuffle(completeList)
 	for song in completeList:
 		if song in playlist: continue
-		size = convert_B_to_MB(get_size(song))
-		totalSize += size
+		totalSize += song.size
 		if totalSize >= maxSize: break
 		playlist.append(song)
 	return playlist
 
-def get_size(filePath):
-	return os.path.getsize(filePath)
-
-def convert_B_to_MB(bytes):
-	return (bytes / (10**6))
-
 #copy files from playlist to target directory
 def copy_files(playlist, targetPath):
-	for item in playlist:
-		path = item
-		print('Copying ' + item + '...', end = '')
+	for song in playlist:
+		print('Copying ' + song.name + '...', end = '')
 		sys.stdout.flush()
-		shutil.copy2(path, targetPath)
+		song.copyTo(targetPath)
 		print(' Copied')
 	return
 	
@@ -55,6 +58,7 @@ def main():
 	sourcePath = os.path.abspath(sys.argv[1])
 	targetPath = os.path.abspath(sys.argv[2])
 	targetSize = int(sys.argv[3])
+	targetSize *= 10**6
 	
 	if not os.path.exists(targetPath):
 		print (targetPath + ' Does not exist. Should I create it? (Y or N)')
